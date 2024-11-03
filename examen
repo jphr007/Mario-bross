@@ -1,0 +1,56 @@
+#include <SFML/Graphics.hpp>
+
+int main() {
+    // Dimensiones de la ventana
+    const int anchoVentana = 800;
+    const int altoVentana = 600;
+
+    // Crear ventana
+    sf::RenderWindow ventana(sf::VideoMode(anchoVentana, altoVentana), "Animación de Balón de Fútbol");
+
+    // Crear el balón
+    sf::CircleShape balon(30);
+    balon.setFillColor(sf::Color::White);
+    balon.setOutlineThickness(5);
+    balon.setOutlineColor(sf::Color::Black);
+
+    // Posición inicial del balón
+    float posX = anchoVentana / 2;
+    float posY = altoVentana / 2;
+    balon.setPosition(posX, posY);
+
+    // Velocidad del balón
+    float velocidadX = 0.3f;
+    float velocidadY = 0.3f;
+
+    // Bucle principal de la ventana
+    while (ventana.isOpen()) {
+        sf::Event evento;
+        while (ventana.pollEvent(evento)) {
+            if (evento.type == sf::Event::Closed)
+                ventana.close();
+        }
+
+        // Mover el balón
+        posX += velocidadX;
+        posY += velocidadY;
+
+        // Rebotar en los bordes
+        if (posX <= 0 || posX + balon.getRadius() * 2 >= anchoVentana) {
+            velocidadX = -velocidadX; // Invertir la dirección en X
+        }
+        if (posY <= 0 || posY + balon.getRadius() * 2 >= altoVentana) {
+            velocidadY = -velocidadY; // Invertir la dirección en Y
+        }
+
+        // Actualizar la posición del balón
+        balon.setPosition(posX, posY);
+
+        // Dibujar en la ventana
+        ventana.clear(sf::Color::Green); // Fondo verde para simular césped
+        ventana.draw(balon);
+        ventana.display();
+    }
+
+    return 0;
+}
