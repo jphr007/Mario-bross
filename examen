@@ -1,56 +1,58 @@
-#include <SFML/Graphics.hpp>
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
+#include <ftxui/screen/color.hpp>
+#include <ftxui/screen/terminal.hpp>
+#include <iostream>
+#include <thread>
 
-int main() {
-    // Dimensiones de la ventana
-    const int anchoVentana = 800;
-    const int altoVentana = 600;
+using namespace std;
+using namespace ftxui;
 
-    // Crear ventana
-    sf::RenderWindow ventana(sf::VideoMode(anchoVentana, altoVentana), "Animación de Balón de Fútbol");
+int main(int argc, char const *argv[]) {
+  std::string reset_position;
+  int frame = 0;
 
-    // Crear el balón
-    sf::CircleShape balon(30);
-    balon.setFillColor(sf::Color::White);
-    balon.setOutlineThickness(5);
-    balon.setOutlineColor(sf::Color::Black);
+  auto ColorSupport = vbox({
+      Terminal::ColorSupport() >= Terminal::Color::Palette16
+          ? text(" 16 color palette support : Yes")
+          : text(" 16 color palette support : No"),
+      Terminal::ColorSupport() >= Terminal::Color::Palette256
+          ? text("256 color palette support : Yes")
+          : text("256 color palette support : No"),
+      Terminal::ColorSupport() >= Terminal::Color::TrueColor
+          ? text("       True color support : Yes")
+          : text("       True color support : No"),
+  });
 
-    // Posición inicial del balón
-    float posX = anchoVentana / 2;
-    float posY = altoVentana / 2;
-    balon.setPosition(posX, posY);
+  while (true) {
+    // Crear un nuevo canvas en cada iteración para "limpiar" la pantalla
+    auto can = Canvas(50, 50);
 
-    // Velocidad del balón
-    float velocidadX = 0.3f;
-    float velocidadY = 0.3f;
+    // Calcular la posición X del auto (se mueve en bucle)
+    int x_position = (frame % 50);
 
-    // Bucle principal de la ventana
-    while (ventana.isOpen()) {
-        sf::Event evento;
-        while (ventana.pollEvent(evento)) {
-            if (evento.type == sf::Event::Closed)
-                ventana.close();
-        }
+    // Dibujar un auto sencillo
+    // Cuerpo del auto
+    can.DrawPointLine(x_position, 30, x_position + 12, 30);  // Parte superior del auto
+    can.DrawPointLine(x_position + 2, 29, x_position + 10, 29); // Techo del auto
+    can.DrawPointLine(x_position, 31, x_position + 12, 31); // Parte inferior del auto
 
-        // Mover el balón
-        posX += velocidadX;
-        posY += velocidadY;
+    // Ruedas del auto
+    can.DrawPointCircle(x_position + 2, 32, 1);  // Rueda delantera
+    can.DrawPointCircle(x_position + 10, 32, 1); // Rueda trasera
 
-        // Rebotar en los bordes
-        if (posX <= 0 || posX + balon.getRadius() * 2 >= anchoVentana) {
-            velocidadX = -velocidadX; // Invertir la dirección en X
-        }
-        if (posY <= 0 || posY + balon.getRadius() * 2 >= altoVentana) {
-            velocidadY = -velocidadY; // Invertir la dirección en Y
-        }
+    // Crear pantalla y renderizar
+    Screen pantalla = Screen::Create(Dimension::Full(), Dimension::Full());
+    Element lienzo = bgcolor(Color::DarkViolet, border(vbox(ColorSupport, canvas(&can))));
+    Render(pantalla, lienzo);
+    std::cout << reset_position;
+    pantalla.Print();
+    reset_position = pantalla.ResetPosition(true);
 
-        // Actualizar la posición del balón
-        balon.setPosition(posX, posY);
+    // Animar cada 0.1 segundos
+    this_thread::sleep_for(0.1s);
+    frame++;
+  }
 
-        // Dibujar en la ventana
-        ventana.clear(sf::Color::Green); // Fondo verde para simular césped
-        ventana.draw(balon);
-        ventana.display();
-    }
-
-    return 0;
+  return 0;
 }
